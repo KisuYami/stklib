@@ -1,20 +1,38 @@
-INSTALL_DIR=/usr/local/include/stk/
-LIB_DIR=/usr/lib/
+TARGET_LIB = libstk.so
 
-all:
-	mkdir -p build/stk
-	#Create objects
-	clang -c -o build/stk/sort.o 	include/stk/sort.c
-	clang -c -o build/stk/stklib.o include/stk/stklib.c
-	clang -c -o build/stk/string.o include/stk/string.c
-	#Create shared lib
-	clang -shared -o build/libstklib.so build/stk/stklib.o build/stk/string.o build/stk/sort.o
+CC 		= gcc
+CFLAGS 	= -O3 -fPIC
+DEBUG_CFLAGS = -Wall -Werror -pedantic -ggdb3 -Wno-error=unknown-pragmas -fPIC
 
-install:
-	mkdir -p $(INSTALL_DIR)
-	install -g 0 -o 0 -m 0755 build/libstklib.so $(LIB_DIR)
-	find include/stk/*.h -type f -exec install -Dm 755 "{}" "$(INSTALL_DIR)" \;
-	ldconfig /usr/lib
+SRC_DIRS 	= ./src
+BUILD_DIR 	= ./build
+
+SRCS = $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
+HEADERS = $(shell find $(SRC_DIRS) -name *.h -or -name *.hh)
+OBJS = $(SRCS:%=$(BUILD_DIR)/%.o)
+
+INCLUDE_DIR=/usr/local/include/stk/
+LIB_DIR=/usr/lib64/
+
+# Program binary
+$(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
+	$(CC) --shared $(OBJS) -o $@ $(LDFLAGS)
+
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+
+ifdef DEBUG
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+else
+	$(CC) $(CFLAGS) -c $< -o $@
+endif
+
+install: $(BUILD_DIR)/$(TARGET_LIB)
+
+	mkdir -p $(INCLUDE_DIR)
+
+	cp build/$(TARGET_LIB) $(DEST_DIR)/$(LIB_DIR)
+	cp $(HEADERS) $(INCLUDE_DIR)
 
 clean:
-	rm -rd build
+	$(RM) -rf $(BUILD_DIR)
