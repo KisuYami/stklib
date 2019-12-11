@@ -27,4 +27,7 @@ stk_strchr(char *string, char target);
 
 char *
 stk_strrchr(char *string, char target);
+
+int
+stk_stoi(char *value);
 #endif
